@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LCA – Portable Cable Machine | A3 Report</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #e6e9ef;
+            /* desktop paper simulation */
+            color: #1e2b3a;
+            padding: 2rem 1.5rem;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        /* ---------- A3 PAPER SIMULATION (screen) ---------- */
+        .lca-container {
+            max-width: 1200px;
+            /* matches A3 portrait width proportionally */
+            width: 100%;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
+            padding: 2.5rem 2.8rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        /* subtle A3 badge */
+        .a3-badge {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            background: #eef2f7;
+            padding: 0.15rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #5a6f82;
+            text-transform: uppercase;
+            border: 1px solid #dce3ec;
+            pointer-events: none;
+        }
+
+        /* ---------- PRINT BUTTON (floating) ---------- */
+        .print-fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 999;
+            background: #1e2b3a;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 0.9rem 1.8rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: transform 0.15s ease, background 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .print-fab:hover {
+            background: #2c3e50;
+            transform: scale(1.03);
+        }
+
+        .print-fab:active {
+            transform: scale(0.97);
+        }
+
+        .print-fab svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* ---------- HEADER ---------- */
+        .lca-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2.2rem;
+            border-bottom: 2px solid #eef2f7;
+            padding-bottom: 1.6rem;
+        }
+
+        .lca-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(145deg, #1e2b3a, #2c3e50);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lca-header .subtitle {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #5a6f82;
+            background: #eef2f7;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            display: inline-block;
+            margin-top: 0.4rem;
+            -webkit-text-fill-color: #5a6f82;
+        }
+
+        .badge-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .badge {
+            background: #eef2f7;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2c3e50;
+            letter-spacing: 0.01em;
+        }
+
+        .badge.highlight {
+            background: #d4e2ed;
+            color: #1a2c3d;
+        }
+
+        /* ---------- INTRO TEXT ---------- */
+        .intro-text {
+            background: #f8faff;
+            border-radius: 1.2rem;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2.5rem;
+            border-left: 5px solid #2c7a7b;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .intro-text p {
+            font-size: 1.05rem;
+            color: #1e2b3a;
+            max-width: 85%;
+        }
+
+        .intro-text strong {
+            color: #1a4a4b;
+            font-weight: 600;
+        }
+
+        /* ---------- PRODUCT SUMMARY CARD ---------- */
+        .product-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.8rem;
+            background: #f9fbfd;
+            border-radius: 1.5rem;
+            padding: 1.8rem 2rem;
+            margin-bottom: 2.8rem;
+            border: 1px solid #e4eaf2;
+        }
+
+        .product-summary h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #5a6f82;
+            margin-bottom: 0.6rem;
+        }
+
+        .product-summary ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1.2rem;
+        }
+
+        .product-summary ul li {
+            font-size: 0.95rem;
+            font-weight: 500;
+            background: #ffffff;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            border: 1px solid #dce3ec;
+            color: #1e2b3a;
+        }
+
+        .product-summary ul li .material-tag {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            margin-right: 6px;
+        }
+
+        .mat-plastic {
+            background: #5b8c9e;
+        }
+        .mat-brass {
+            background: #c9a84c;
+        }
+        .mat-aluminium {
+            background: #a8b8c9;
+        }
+        .mat-wood {
+            background: #8b6b4d;
+        }
+        .mat-electronics {
+            background: #6f7d8c;
+        }
+
+        /* ---------- LCA STAGES GRID ---------- */
+        .stages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.8rem;
+            margin: 2.8rem 0 3rem;
+        }
+
+        .stage-card {
+            background: #ffffff;
+            border-radius: 1.4rem;
+            padding: 1.8rem 1.6rem 1.6rem;
+            border: 1px solid #e4eaf2;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .stage-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+        }
+
+        .stage-card .stage-icon {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+        .stage-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1a2c3d;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .stage-card .stage-number {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #dce3ec;
+            color: #2c3e50;
+            padding: 0.1rem 0.7rem;
+            border-radius: 30px;
+            margin-left: 0.4rem;
+        }
+
+        .stage-card p,
+        .stage-card li {
+            font-size: 0.95rem;
+            color: #2f4052;
+            line-height: 1.6;
+        }
+
+        .stage-card ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 0.6rem;
+        }
+
+        .stage-card ul li {
+            padding: 0.25rem 0 0.25rem 1.4rem;
+            position: relative;
+            font-size: 0.92rem;
+        }
+
+        .stage-card ul li::before {
+            content: "›";
+            position: absolute;
+            left: 0;
+            color: #2c7a7b;
+            font-weight: 700;
+        }
+
+        .stage-card .material-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem 0.6rem;
+            margin-top: 0.6rem;
+        }
+
+        .stage-card .material-list span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: #f0f4fa;
+            padding: 0.15rem 0.7rem;
+            border-radius: 30px;
+            color: #1e2b3a;
+        }
+
+        .impact-badge {
+            display: inline-block;
+            margin-top: 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            background: #eef2f7;
+            color: #2c3e50;
+        }
+
+        .impact-badge.high {
+            background: #fde8e8;
+            color: #a13d3d;
+        }
+        .impact-badge.medium {
+            background: #fef3d7;
+            color: #8d6b2b;
+        }
+        .impact-badge.low {
+            background: #e3f0e8;
+            color: #2a6b4a;
+        }
+
+        /* ---------- MATERIAL FLOW TABLE ---------- */
+        .material-flow {
+            margin: 2.8rem 0 2.5rem;
+            background: #f9fbfd;
+            border-radius: 1.5rem;
+            padding: 1.8rem 2rem;
+            border: 1px solid #e4eaf2;
+        }
+
+        .material-flow h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            color: #1a2c3d;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .material-flow table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        .material-flow th {
+            text-align: left;
+            padding: 0.8rem 0.6rem 0.6rem 0;
+            font-weight: 600;
+            color: #3d5368;
+            border-bottom: 2px solid #dce3ec;
+        }
+
+        .material-flow td {
+            padding: 0.7rem 0.6rem 0.7rem 0;
+            border-bottom: 1px solid #e4eaf2;
+            color: #1e2b3a;
+        }
+
+        .material-flow tr:last-child td {
+            border-bottom: none;
+        }
+
+        .material-flow .impact-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            margin-right: 6px;
+        }
+
+        .impact-dot-high {
+            background: #c94a4a;
+        }
+        .impact-dot-medium {
+            background: #e8b84a;
+        }
+        .impact-dot-low {
+            background: #4a9e6e;
+        }
+
+        /* ---------- TWO-COLUMN (EOL + IMPROVEMENTS) ---------- */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2.5rem 0 2rem;
+        }
+
+        .card-block {
+            background: #f9fbfd;
+            border-radius: 1.5rem;
+            padding: 1.8rem 2rem;
+            border: 1px solid #e4eaf2;
+        }
+
+        .card-block h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1a2c3d;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card-block ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card-block ul li {
+            padding: 0.4rem 0 0.4rem 1.6rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: #2f4052;
+        }
+
+        .card-block ul li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #2c7a7b;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .card-block ul li strong {
+            color: #1a2c3d;
+        }
+
+        /* ---------- FOOTER ---------- */
+        .lca-footer {
+            margin-top: 2.8rem;
+            padding-top: 1.8rem;
+            border-top: 2px solid #eef2f7;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #5a6f82;
+        }
+
+        .lca-footer .footnote {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .lca-footer .footnote span {
+            background: #f0f4fa;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+        }
+
+        .text-muted {
+            color: #5a6f82;
+            font-size: 0.9rem;
+        }
+        .mt-1 {
+            margin-top: 0.6rem;
+        }
+
+        /* ---------- PRINT STYLES (A3 FORMAT) ---------- */
+        @media print {
+            /* hide print button and interactive elements */
+            .print-fab,
+            .a3-badge {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block;
+            }
+
+            .lca-container {
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 1.5rem 2rem !important;
+                background: white !important;
+            }
+
+            .stage-card:hover {
+                transform: none !important;
+                box-shadow: none !important;
+            }
+
+            .stage-card {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #ccc !important;
+            }
+
+            .product-summary,
+            .material-flow,
+            .card-block {
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #ccc !important;
+                background: #fafafa !important;
+            }
+
+            .intro-text {
+                border-left-color: #2c7a7b !important;
+                background: #f8faff !important;
+            }
+
+            /* ensure grid doesn't break */
+            .stages-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.2rem;
+            }
+
+            .two-col {
+                display: grid;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.2rem;
+            }
+
+            .lca-header h1 {
+            background: none !important;
+                -webkit-text-fill-color: #1e2b3a !important;
+                color: #1e2b3a !important;
+            }
+
+            .badge {
+                background: #eef2f7 !important;
+                border: 1px solid #dce3ec !important;
+            }
+
+            .material-flow table {
+                font-size: 0.8rem !important;
+            }
+            .material-flow th,
+            .material-flow td {
+                padding: 0.4rem 0.3rem 0.4rem 0 !important;
+            }
+        }
+
+        /* ---------- A3 PAGE SETUP (for PDF/Print) ---------- */
+        @page {
+            size: A3 portrait;
+            /* 297mm x 420mm */
+            margin: 18mm 18mm 22mm 18mm;
+        }
+
+        @page :first {
+            margin-top: 22mm;
+        }
+
+        /* ---------- RESPONSIVE (screen) ---------- */
+        @media (max-width: 820px) {
+            .lca-container {
+                padding: 1.8rem 1.2rem;
+            }
+            .lca-header {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+            .intro-text p {
+                max-width: 100%;
+            }
+            .product-summary {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+            .stages-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .a3-badge {
+                display: none;
+            }
+            .print-fab {
+                bottom: 1rem;
+                right: 1rem;
+                padding: 0.7rem 1.2rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .stages-grid {
+                grid-template-columns: 1fr;
+            }
+            .lca-container {
+                padding: 1.2rem 0.8rem;
+            }
+            .lca-header h1 {
+                font-size: 1.6rem;
+            }
+            .badge-group {
+                gap: 0.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- floating download / print button -->
+    <button class="print-fab" id="printLca" aria-label="Download as PDF or Print (A3)">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+        </svg>
+        <span>Download PDF (A3)</span>
+    </button>
+
+    <div class="lca-container">
+        <!-- A3 badge (screen only) -->
+        <div class="a3-badge">📄 A3 Report</div>
+
+        <!-- ===== HEADER ===== -->
+        <header class="lca-header">
+            <div>
+                <h1>♻️ Life Cycle Assessment</h1>
+                <div class="subtitle">Portable Cable Machine · DT GCSE NEA</div>
+            </div>
+            <div class="badge-group">
+                <span class="badge">Candidate: ________</span>
+                <span class="badge highlight">Centre: ________</span>
+                <span class="badge">NEA 2026</span>
+            </div>
+        </header>
+
+        <!-- ===== INTRO ===== -->
+        <div class="intro-text">
+            <p>
+                <strong>Objective:</strong> Evaluate the environmental impact of the <strong>portable cable machine</strong>
+                across its full life cycle — from raw material extraction to end-of-life disposal.
+                This assessment considers material choices, manufacturing processes, energy use,
+                and recyclability to identify opportunities for sustainable design.
+            </p>
+        </div>
+
+        <!-- ===== PRODUCT SUMMARY ===== -->
+        <div class="product-summary">
+            <div>
+                <h3>📦 Materials Used</h3>
+                <ul>
+                    <li><span class="material-tag mat-plastic"></span> 3D-printed PLA/PETG (main body)</li>
+                    <li><span class="material-tag mat-brass"></span> Brass rod (guide shaft)</li>
+                    <li><span class="material-tag mat-aluminium"></span> Aluminium bracket</li>
+                    <li><span class="material-tag mat-wood"></span> Ash handle · Mahogany top</li>
+                    <li><span class="material-tag mat-electronics"></span> LCD 1602 · ESP32 · Servo · AA batteries</li>
+                </ul>
+            </div>
+            <div>
+                <h3>⚙️ Product Function</h3>
+                <ul>
+                    <li>Portable resistance training</li>
+                    <li>Adjustable cable tension via servo</li>
+                    <li>LCD displays reps &amp; resistance level</li>
+                    <li>ESP32 enables Bluetooth / app control</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ===== LCA STAGES ===== -->
+        <div class="stages-grid">
+
+            <div class="stage-card">
+                <span class="stage-icon">⛏️</span>
+                <h3>Raw Materials <span class="stage-number">1</span></h3>
+                <p><strong>Extraction &amp; sourcing:</strong></p>
+                <ul>
+                    <li><strong>PLA</strong> – derived from corn starch (renewable, but land-use &amp; fertiliser inputs)</li>
+                    <li><strong>PETG</strong> – petroleum-based, higher carbon footprint</li>
+                    <li><strong>Brass</strong> – copper &amp; zinc mining, energy-intensive</li>
+                    <li><strong>Aluminium</strong> – bauxite mining, high embodied energy</li>
+                    <li><strong>Ash &amp; Mahogany</strong> – sustainably sourced timber (FSC preferred)</li>
+                    <li><strong>Electronics</strong> – rare earth metals, silicon, lithium (batteries)</li>
+                </ul>
+                <div class="material-list">
+                    <span>🌾 PLA</span><span>🛢️ PETG</span><span>🔩 Brass</span>
+                    <span>🪵 Ash</span><span>🌳 Mahogany</span><span>🔋 Electronics</span>
+                </div>
+                <span class="impact-badge high">High impact: brass &amp; electronics</span>
+            </div>
+
+            <div class="stage-card">
+                <span class="stage-icon">🏭</span>
+                <h3>Manufacturing <span class="stage-number">2</span></h3>
+                <ul>
+                    <li><strong>3D printing</strong> – FDM process; electricity consumption (~0.5–1 kWh per part)</li>
+                    <li><strong>Brass rod</strong> – extruded and cut; low waste if accurately sized</li>
+                    <li><strong>Aluminium</strong> – CNC machined or laser-cut; coolant &amp; energy use</li>
+                    <li><strong>Wood components</strong> – routed, sanded, finished with natural oil</li>
+                    <li><strong>PCB assembly</strong> – soldering, surface-mount components; flux &amp; cleaning</li>
+                    <li><strong>Battery</strong> – AA batteries (alkaline) produced with high energy input</li>
+                </ul>
+                <span class="impact-badge medium">Medium impact: electricity &amp; machining</span>
+            </div>
+
+            <div class="stage-card">
+                <span class="stage-icon">🚚</span>
+                <h3>Distribution &amp; Use <span class="stage-number">3</span></h3>
+                <ul>
+                    <li><strong>Packaging</strong> – cardboard &amp; recycled paper, minimal plastic</li>
+                    <li><strong>Transport</strong> – lightweight design reduces shipping emissions</li>
+                    <li><strong>Use phase</strong> – battery-powered (AA); servo &amp; LCD draw ~200–300 mA</li>
+                    <li><strong>Durability</strong> – 3D-printed parts are repairable; brass &amp; aluminium long-lasting</li>
+                    <li><strong>User maintenance</strong> – replace batteries; clean rod &amp; bearings</li>
+                    <li><strong>Energy</strong> – no mains power required; low operational carbon</li>
+                </ul>
+                <span class="impact-badge low">Low impact during use (battery only)</span>
+            </div>
+
+            <div class="stage-card">
+                <span class="stage-icon">♻️</span>
+                <h3>End of Life <span class="stage-number">4</span></h3>
+                <ul>
+                    <li><strong>PLA / PETG</strong> – recyclable (PLA industrial compostable, PETG recyclable #1)</li>
+                    <li><strong>Brass &amp; Aluminium</strong> – 100% recyclable with high scrap value</li>
+                    <li><strong>Wood</strong> – biodegradable; can be reused or composted</li>
+                    <li><strong>Electronics</strong> – WEEE directive; PCB &amp; components need specialist recycling</li>
+                    <li><strong>Batteries</strong> – must be recycled via dedicated battery collection</li>
+                    <li><strong>Overall</strong> – ~75% of materials can be recycled or composted</li>
+                </ul>
+                <span class="impact-badge medium">Recycling potential: high for metals &amp; plastics</span>
+            </div>
+
+        </div>
+
+        <!-- ===== MATERIAL FLOW TABLE ===== -->
+        <div class="material-flow">
+            <h2>📊 Material Flow &amp; Environmental Impact</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Material / Component</th>
+                        <th>Mass (approx.)</th>
+                        <th>Embodied Energy (MJ/kg)</th>
+                        <th>Carbon Footprint (kg CO₂e/kg)</th>
+                        <th>Recyclability</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PLA / PETG</strong> (3D-printed parts)</td>
+                        <td>~450 g</td>
+                        <td>50–80</td>
+                        <td>2.5–3.5</td>
+                        <td>♻️ Recyclable / compostable</td>
+                        <td><span class="impact-indicator impact-dot-medium"></span> Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brass rod</strong></td>
+                        <td>~200 g</td>
+                        <td>~120</td>
+                        <td>~4.5</td>
+                        <td>♻️ 100% recyclable</td>
+                        <td><span class="impact-indicator impact-dot-high"></span> High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Aluminium bracket</strong></td>
+                        <td>~80 g</td>
+                        <td>~200</td>
+                        <td>~8.5</td>
+                        <td>♻️ 100% recyclable</td>
+                        <td><span class="impact-indicator impact-dot-high"></span> High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ash handle &amp; Mahogany top</strong></td>
+                        <td>~120 g</td>
+                        <td>~10</td>
+                        <td>~0.5</td>
+                        <td>🌱 Biodegradable</td>
+                        <td><span class="impact-indicator impact-dot-low"></span> Low</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Electronics</strong> (LCD, ESP32, servo)</td>
+                        <td>~60 g</td>
+                        <td>~300</td>
+                        <td>~12</td>
+                        <td>♻️ WEEE recycling</td>
+                        <td><span class="impact-indicator impact-dot-high"></span> High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AA batteries</strong> (4x)</td>
+                        <td>~96 g</td>
+                        <td>~150</td>
+                        <td>~6</td>
+                        <td>🔋 Battery recycling</td>
+                        <td><span class="impact-indicator impact-dot-medium"></span> Medium</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="text-muted mt-1">
+                <em>Values are approximate based on typical material data. Actual impact depends on
+                    manufacturing efficiency, transportation, and energy mix.</em>
+            </p>
+        </div>
+
+        <!-- ===== TWO COLUMN: EOL + IMPROVEMENTS ===== -->
+        <div class="two-col">
+
+            <div class="card-block">
+                <h2>♻️ End-of-Life Strategy</h2>
+                <ul>
+                    <li><strong>Disassembly</strong> – Designed with screws and snap-fits to separate materials easily.</li>
+                    <li><strong>Plastics</strong> – PLA parts can be industrially composted; PETG sorted and recycled.</li>
+                    <li><strong>Metals</strong> – Brass and aluminium sent to scrap metal recycling (high recovery rate).</li>
+                    <li><strong>Wood</strong> – Ash and mahogany can be repurposed or composted if untreated.</li>
+                    <li><strong>PCBs &amp; electronics</strong> – Collected via WEEE scheme; precious metals recovered.</li>
+                    <li><strong>Batteries</strong> – Return to retailer or battery recycling point.</li>
+                </ul>
+                <p style="margin-top:0.8rem; font-size:0.92rem; color:#2f4052;">
+                    ✅ <strong>Circular potential:</strong> Over 70% of the product by mass can be recycled
+                    or composted with proper sorting.
+                </p>
+            </div>
+
+            <div class="card-block">
+                <h2>🌱 Design Improvements</h2>
+                <ul>
+                    <li><strong>Material substitution</strong> – Replace PETG with recycled PLA or bio-based PET.</li>
+                    <li><strong>Brass alternative</strong> – Use stainless steel or aluminium alloy with lower impact.</li>
+                    <li><strong>Wood sourcing</strong> – Specify FSC-certified Ash &amp; Mahogany.</li>
+                    <li><strong>Modular electronics</strong> – Use socketed components for easier repair &amp; upgrade.</li>
+                    <li><strong>Battery</strong> – Switch to rechargeable Li-ion pack (reduces waste over time).</li>
+                    <li><strong>3D printing</strong> – Optimise infill &amp; use 100% recycled filament.</li>
+                    <li><strong>Packaging</strong> – 100% recycled cardboard with no plastic inserts.</li>
+                </ul>
+                <p style="margin-top:0.8rem; font-size:0.92rem; color:#2f4052;">
+                    💡 <strong>Net impact reduction:</strong> Estimated <strong>25–35%</strong> lower carbon footprint
+                    with these changes.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="lca-footer">
+            <div class="footnote">
+                <span>📅 Assessment date: 2026</span>
+                <span>📋 NEA component: Design &amp; Technology</span>
+                <span>🏷️ Version 1.0</span>
+            </div>
+            <div>
+                <span style="opacity:0.6;">Portable Cable Machine · Life Cycle Assessment</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- PRINT / PDF DOWNLOAD (A3) ---
+            const printBtn = document.getElementById('printLca');
+            if (printBtn) {
+                printBtn.addEventListener('click', function(e) {
+                    window.print();
+                });
+            }
+
+            // --- Removed the opacity animation to prevent white page bug ---
+            console.log('✅ LCA A3 Report ready. Click the floating button to print / save as PDF.');
+        });
+    </script>
+
+</body>
+</html>
